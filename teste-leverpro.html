@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Teste de Programação / Lógica - LEVERPRO</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            overflow-x: auto;
+        }
+
+        button {
+            margin: 5px 0;
+        }
+    </style>
+    <script>
+        const MAX_BITS = 32;
+        const MASK = 0xFFFFFFFF;
+        const SIGN_BIT = 1 << 31;
+
+
+        function somaBitwise(a, b) {
+            if (b === 0) {
+                return a < SIGN_BIT ? a : ~(a ^ MASK);
+            }
+
+            let carry = (a & b) & MASK;
+            a = (a ^ b) & MASK;
+            b = (carry << 1) & MASK;
+            return somaBitwise(a, b);
+        }
+
+        function multiplicacaoBitwise(a, b, resultado = 0) {
+            if (b === 0) {
+                return resultado < SIGN_BIT ? resultado : ~(resultado ^ MASK);
+            }
+
+            if (b & 1) {
+                resultado = somaBitwise(resultado, a);
+            }
+            a = (a << 1) & MASK;
+            b >>>= 1; // Deslocamento lógico para manter número positivo
+            return multiplicacaoBitwise(a, b, resultado);
+        }
+
+        function exponenciacaoBitwise(base, expoente, resultado = 1, vezesMultiplica = 0) {
+            if (expoente == 0) {
+                console.log("quantidade de multiplicações: " + vezesMultiplica);
+                return resultado
+            }
+
+            resultado = multiplicacaoBitwise(base, resultado);
+            expoente = somaBitwise(expoente, -1);
+            vezesMultiplica = somaBitwise(vezesMultiplica, 1);
+
+            return exponenciacaoBitwise(base, expoente, resultado, vezesMultiplica);
+        }
+
+        function eDivisivelPorBitwise(a, b) {
+            if (b === 0) {
+                throw new Error("Divisão por zero não é permitida.");
+            }
+            if (a === 0) {
+                return true;
+            }
+            if (a < b) {
+                return false;
+            }
+            a = somaBitwise(a, -b); // Subtrai b de a usando soma bitwise
+            return eDivisivelPorBitwise(a, b);
+        }
+
+        function obterDivisores(base, divisores = [], n = Infinity) {
+            if (n === Infinity) {
+                n = base;
+            }
+
+            if (eDivisivelPorBitwise(base, n)) {
+                divisores.push(n);
+            }
+
+            n = somaBitwise(n, -1);
+
+            if (n >= 1) {
+                obterDivisores(base, divisores, n);  // <-- ordem corrigida
+            }
+
+            return divisores; // para obter resultado final
+        }
+
+        function mdc(m, n) {
+
+            arr1 = obterDivisores(m);
+            arr2 = obterDivisores(n);
+
+            const set2 = new Set(arr2);  // Acesso rápido
+            let maior = -Infinity;
+
+            for (let i = 0; i < arr1.length; i = somaBitwise(i, 1)) {
+                if (set2.has(arr1[i]) && arr1[i] > maior) {
+                    maior = arr1[i];
+                }
+            }
+
+            return maior === -Infinity ? null : maior;
+        }
+
+
+
+        const a = exponenciacaoBitwise(2, 10);
+        console.log(a);  // Saída: 1024
+
+        const b = eDivisivelPorBitwise(1024, 2);
+        const c = eDivisivelPorBitwise(1024, 3);
+
+        console.log(b);
+        console.log(c);
+
+        const divisores_16 = []
+        obterDivisores(16, divisores = divisores_16);
+
+        console.log(divisores_16);
+
+        mdc_16_128 = mdc(26, 128);
+        console.log(mdc_16_128);
+
+
+        // --
+
+        class InvestimentoRendaFixa {
+            constructor(cdi) {
+                this.saldo = 0;
+                this.cdi = cdi;
+            }
+
+            investir(valor) {
+                this.saldo += valor;
+            }
+
+            rentabilidadeInvestimento(indice) {
+                this.saldo += this.saldo * (indice / 100) * (this.cdi / 100);
+            }
+
+            imprimirSaldo(mes) {
+                console.log(`Saldo RF ${this.cdi}% CDI Mês ${mes} = R$ ${this.saldo.toFixed(2)}`);
+            }
+        }
+
+        class InvestimentoRendaFixaCDI120 extends InvestimentoRendaFixa {
+            constructor() {
+                super(120);
+            }
+        }
+
+        class InvestimentoRendaFixaCDI180 extends InvestimentoRendaFixa {
+            constructor() {
+                super(180);
+            }
+        }
+
+        const invest120 = new InvestimentoRendaFixaCDI120();
+        invest120.investir(1000);
+        invest120.imprimirSaldo('Set/2020');
+        invest120.rentabilidadeInvestimento(0.16);
+        invest120.imprimirSaldo('Out/2020');
+
+        const invest180 = new InvestimentoRendaFixaCDI180();
+        invest180.investir(1000);
+        invest180.imprimirSaldo('Set/2020');
+        invest180.rentabilidadeInvestimento(0.16);
+        invest180.imprimirSaldo('Out/2020');
+
+
+        //De um valor numerico inteiro a estas variaveis
+        const valBase = 10;
+        const valBase2 = 5;
+        function fazerAlgo(num1, num2, callback) {
+            callback(num1++, ++num2);
+            console.log(num2);
+        }
+        fazerAlgo(valBase, valBase2, function (novoNum1, novoNum2) {
+            //De um valor a estas variaveis que seja a soma de outras variaveis
+            let valX = 20;
+            let valY = 11;
+            console.log('valBase:' + novoNum1);
+            fazerAlgo(valX, valY, function (valBase, valBase2) {
+                setTimeout(function () {
+                    console.log('valBase:' + novoNum1);
+                }, 1000, valBase);
+
+                fazerAlgo(Math.pow(valBase, 2), valBase2, function (valFinal1, valFinal2) {
+                    setTimeout(function () {
+                        console.log('pow:' + (valFinal1 - valFinal2));
+                    }, 1000, valBase);
+                });
+
+                setTimeout(function () {
+                    console.log('valY:' + valBase2); // subtrair 1 para o valor real
+                }, 500, valBase);
+            });
+        });
+
+        //--
+
+        function combinarOperacoesCallback(valorInicial, funcoes, callbackFinal) {
+            function executar(index, valorAtual) {
+                if (index >= funcoes.length) {
+                    callbackFinal(null, valorAtual);
+                    return;
+                }
+                funcoes[index](valorAtual, (erro, resultado) => {
+                    if (erro) {
+                        callbackFinal(erro);
+                        return;
+                    }
+                    executar(index + 1, resultado);
+                });
+            }
+            executar(0, valorInicial);
+        }
+
+        // Exemplo de funções com callbacks
+        function adicionaCem(num, callback) {
+            callback(null, num + 100);
+        }
+
+        function dividePorCinco(num, callback) {
+            callback(null, num / 5);
+        }
+
+        function multiplicaPorTres(num, callback) {
+            callback(null, num * 3);
+        }
+
+        // Exemplo de uso
+        combinarOperacoesCallback(0, [adicionaCem, dividePorCinco, multiplicaPorTres], (erro, resultado) => {
+            if (erro) {
+                console.error(erro);
+            } else {
+                console.log("Valor Final combinarOperacoesCallback =", resultado); // Valor Final = 60
+            }
+        });
+
+        //--
+
+        function combinarOperacoesPromise(valorInicial, funcoes) {
+            return funcoes.reduce((promessa, funcaoAtual) => {
+                return promessa.then(funcaoAtual);
+            }, Promise.resolve(valorInicial));
+        }
+
+        // Exemplo de funções que retornam Promises
+        function adicionaCePromisem(num) {
+            return Promise.resolve(num + 100);
+        }
+
+        function dividePorCincPromiseo(num) {
+            return Promise.resolve(num / 5);
+        }
+
+        function multiplicaPorTresPromise(num) {
+            return Promise.resolve(num * 3);
+        }
+
+        // Exemplo de uso
+        combinarOperacoesPromise(0, [adicionaCePromisem, dividePorCincPromiseo, multiplicaPorTresPromise])
+            .then(resultado => {
+                console.log("Valor Final combinarOperacoesPromise =", resultado); // Valor Final = 60
+            })
+            .catch(erro => {
+                console.error(erro);
+            });
+
+        //--
+
+        async function combinarOperacoesAsync(valorInicial, funcoes) {
+            let resultado = valorInicial;
+            for (const funcao of funcoes) {
+                resultado = await funcao(resultado);
+            }
+            return resultado;
+        }
+
+        // Exemplo de funções assíncronas
+        async function adicionaCemAsync(num) {
+            return num + 100;
+        }
+
+        async function dividePorCincoAsync(num) {
+            return num / 5;
+        }
+
+        async function multiplicaPorTresAsync(num) {
+            return num * 3;
+        }
+
+        // Exemplo de uso
+        (async () => {
+            try {
+                const resultado = await combinarOperacoesAsync(0, [adicionaCemAsync, dividePorCincoAsync, multiplicaPorTresAsync]);
+                console.log("Valor Final Async=", resultado); // Valor Final = 60
+            } catch (erro) {
+                console.error(erro);
+            }
+        })();
+    </script>
+</head>
+
+<body>
+    <h1>Respostas</h1>
+    <section>
+        <p>Para responder as questões 1 e 2 foram criadas as funções abaixo:</p>
+
+        <section>
+            <script>
+                function executarSomaBitwise() {
+                    const inputA = parseInt(document.getElementById('inputA').value);
+                    const inputB = parseInt(document.getElementById('inputB').value);
+
+                    if (isNaN(inputA) || isNaN(inputB)) {
+                        document.getElementById('saidaSomaBitwise').textContent = 'Por favor, insira dois números válidos.';
+                        return;
+                    }
+
+                    const resultado = somaBitwise(inputA, inputB);
+                    document.getElementById('saidaSomaBitwise').textContent = `Resultado da soma bitwise: ${resultado}`;
+                }
+            </script>
+
+            <h2>Soma Bitwise</h2>
+            <label for="inputA">Valor A:</label>
+            <input type="number" id="inputA">
+            <label for="inputB">Valor B:</label>
+            <input type="number" id="inputB">
+            <button onclick="executarSomaBitwise()">Somar</button>
+            <pre id="saidaSomaBitwise"></pre>
+        </section>
+
+
+        <section>
+            <script>
+                function executarMultiplicacaoBitwise() {
+                    const inputA = parseInt(document.getElementById('inputMultA').value);
+                    const inputB = parseInt(document.getElementById('inputMultB').value);
+
+                    if (isNaN(inputA) || isNaN(inputB)) {
+                        document.getElementById('saidaMultiplicacaoBitwise').textContent = 'Por favor, insira dois números válidos.';
+                        return;
+                    }
+
+                    const resultado = multiplicacaoBitwise(inputA, inputB);
+                    document.getElementById('saidaMultiplicacaoBitwise').textContent = `Resultado da multiplicação bitwise: ${resultado}`;
+                }
+            </script>
+            <h2>Multiplicação Bitwise</h2>
+            <p>Os limites definidos para resposta são 2.147.483.647 e -2.147.483.648 pelo fato de estar limitado a 32
+                bits</p>
+            <label for="inputMultA">Valor A:</label>
+            <input type="number" id="inputMultA">
+            <label for="inputMultB">Valor B:</label>
+            <input type="number" id="inputMultB">
+            <button onclick="executarMultiplicacaoBitwise()">Multiplicar</button>
+            <pre id="saidaMultiplicacaoBitwise"></pre>
+        </section>
+
+        <section>
+            <script>
+                function executarExponenciacaoBitwise() {
+                    const base = parseInt(document.getElementById('inputExpoBase').value);
+                    const expoente = parseInt(document.getElementById('inputExpoExpoente').value);
+
+                    if (isNaN(base) || isNaN(expoente)) {
+                        document.getElementById('saidaExponenciacaoBitwise').textContent = 'Insira valores válidos para base e expoente.';
+                        return;
+                    }
+
+                    const resultado = exponenciacaoBitwise(base, expoente);
+                    document.getElementById('saidaExponenciacaoBitwise').textContent = `Resultado da exponenciação bitwise: ${resultado}`;
+                }
+            </script>
+            <h2>Exponenciação Bitwise</h2>
+            <label for="inputExpoBase">Base:</label>
+            <input type="number" id="inputExpoBase">
+            <label for="inputExpoExpoente">Expoente:</label>
+            <input type="number" id="inputExpoExpoente">
+            <button onclick="executarExponenciacaoBitwise()">Exponenciar</button>
+            <pre id="saidaExponenciacaoBitwise"></pre>
+        </section>
+
+        <section>
+            <script>
+                function executarMdcBitwise() {
+                    const m = parseInt(document.getElementById('inputMdcM').value);
+                    const n = parseInt(document.getElementById('inputMdcN').value);
+
+                    if (isNaN(m) || isNaN(n)) {
+                        document.getElementById('saidaMdcBitwise').textContent = 'Insira dois números válidos.';
+                        return;
+                    }
+
+                    const resultado = mdc(m, n);
+                    document.getElementById('saidaMdcBitwise').textContent = `MDC Bitwise entre ${m} e ${n} é: ${resultado}`;
+                }
+            </script>
+            <h2>MDC Bitwise</h2>
+            <label for="inputMdcM">Número 1 (m):</label>
+            <input type="number" id="inputMdcM">
+            <label for="inputMdcN">Número 2 (n):</label>
+            <input type="number" id="inputMdcN">
+            <button onclick="executarMdcBitwise()">Calcular MDC</button>
+            <pre id="saidaMdcBitwise"></pre>
+        </section>
+
+    </section>
+
+    <section>
+        <h2>Questão 3 Classes e Herança - Investimento Renda Fixa</h2>
+        <pre>
+    <code>
+// --
+
+class InvestimentoRendaFixa {
+  constructor(cdi) {
+    this.saldo = 0;
+    this.cdi = cdi;
+  }
+
+  investir(valor) {
+    this.saldo += valor;
+  }
+
+  rentabilidadeInvestimento(indice) {
+    this.saldo += this.saldo * (indice / 100) * (this.cdi / 100);
+  }
+
+  imprimirSaldo(mes) {
+    console.log(`Saldo RF ${this.cdi}% CDI Mês ${mes} = R$ ${this.saldo.toFixed(2)}`);
+  }
+}
+
+class InvestimentoRendaFixaCDI120 extends InvestimentoRendaFixa {
+  constructor() {
+    super(120);
+  }
+}
+
+class InvestimentoRendaFixaCDI180 extends InvestimentoRendaFixa {
+  constructor() {
+    super(180);
+  }
+}
+
+const invest120 = new InvestimentoRendaFixaCDI120();
+invest120.investir(1000);
+invest120.imprimirSaldo('Set/2020');
+invest120.rentabilidadeInvestimento(0.16);
+invest120.imprimirSaldo('Out/2020');
+
+const invest180 = new InvestimentoRendaFixaCDI180();
+invest180.investir(1000);
+invest180.imprimirSaldo('Set/2020');
+invest180.rentabilidadeInvestimento(0.16);
+invest180.imprimirSaldo('Out/2020');
+    </code>
+  </pre>
+    </section>
+
+    <section>
+        <h2>Questão 4 - Debug</h2>
+        <pre>
+    <code>
+// De um valor numerico inteiro a estas variaveis
+const valBase = 10;
+const valBase2 = 5;
+
+function fazerAlgo(num1, num2, callback) {
+    callback(num1++, ++num2);
+    console.log(num2);
+}
+
+fazerAlgo(valBase, valBase2, function (novoNum1, novoNum2) {
+    // De um valor a estas variaveis que seja a soma de outras variaveis
+    let valX = 20;
+    let valY = 11;
+    console.log('valBase:' + novoNum1);
+    
+    fazerAlgo(valX, valY, function (valBase, valBase2) {
+        setTimeout(function () {
+            console.log('valBase:' + novoNum1);
+        }, 1000, valBase);
+
+        fazerAlgo(Math.pow(valBase, 2), valBase2, function (valFinal1, valFinal2) {
+            setTimeout(function () {
+                console.log('pow:' + (valFinal1 - valFinal2));
+            }, 1000, valBase);
+        });
+
+        setTimeout(function () {
+            console.log('valY:' + valBase2); // subtrair 1 para o valor real
+        }, 500, valBase);
+    });
+});
+    </code>
+  </pre>
+    </section>
+
+    <section>
+        <h2>Questão 5 - Combinação de Operações com Callbacks, Promises e Async/Await</h2>
+        <pre>
+    <code>
+function combinarOperacoesCallback(valorInicial, funcoes, callbackFinal) {
+  function executar(index, valorAtual) {
+    if (index >= funcoes.length) {
+      callbackFinal(null, valorAtual);
+      return;
+    }
+    funcoes[index](valorAtual, (erro, resultado) => {
+      if (erro) {
+        callbackFinal(erro);
+        return;
+      }
+      executar(index + 1, resultado);
+    });
+  }
+  executar(0, valorInicial);
+}
+
+// Exemplo de funções com callbacks
+function adicionaCem(num, callback) {
+  callback(null, num + 100);
+}
+
+function dividePorCinco(num, callback) {
+  callback(null, num / 5);
+}
+
+function multiplicaPorTres(num, callback) {
+  callback(null, num * 3);
+}
+
+// Exemplo de uso
+combinarOperacoesCallback(0, [adicionaCem, dividePorCinco, multiplicaPorTres], (erro, resultado) => {
+  if (erro) {
+    console.error(erro);
+  } else {
+    console.log("Valor Final combinarOperacoesCallback =", resultado); // Valor Final = 60
+  }
+});
+
+//--
+
+function combinarOperacoesPromise(valorInicial, funcoes) {
+  return funcoes.reduce((promessa, funcaoAtual) => {
+    return promessa.then(funcaoAtual);
+  }, Promise.resolve(valorInicial));
+}
+
+// Exemplo de funções que retornam Promises
+function adicionaCePromisem(num) {
+  return Promise.resolve(num + 100);
+}
+
+function dividePorCincPromiseo(num) {
+  return Promise.resolve(num / 5);
+}
+
+function multiplicaPorTresPromise(num) {
+  return Promise.resolve(num * 3);
+}
+
+// Exemplo de uso
+combinarOperacoesPromise(0, [adicionaCePromisem, dividePorCincPromiseo, multiplicaPorTresPromise])
+  .then(resultado => {
+    console.log("Valor Final combinarOperacoesPromise =", resultado); // Valor Final = 60
+  })
+  .catch(erro => {
+    console.error(erro);
+  });
+
+//--
+
+async function combinarOperacoesAsync(valorInicial, funcoes) {
+  let resultado = valorInicial;
+  for (const funcao of funcoes) {
+    resultado = await funcao(resultado);
+  }
+  return resultado;
+}
+
+// Exemplo de funções assíncronas
+async function adicionaCemAsync(num) {
+  return num + 100;
+}
+
+async function dividePorCincoAsync(num) {
+  return num / 5;
+}
+
+async function multiplicaPorTresAsync(num) {
+  return num * 3;
+}
+
+// Exemplo de uso
+(async () => {
+  try {
+    const resultado = await combinarOperacoesAsync(0, [adicionaCemAsync, dividePorCincoAsync, multiplicaPorTresAsync]);
+    console.log("Valor Final Async=", resultado); // Valor Final = 60
+  } catch (erro) {
+    console.error(erro);
+  }
+})();
+    </code>
+  </pre>
+    </section>
+    <section>
+        <p>Questão 6 - Manipulação de dados usando SQL</p>
+        <section>
+            <h2>Consulta 1: Quantidade de Salas por Prédio</h2>
+            <pre>
+    <code>
+SELECT 
+    p.descricaopredio,
+    COUNT(s.numsala) AS quantidade_salas
+FROM 
+    predio p
+JOIN 
+    sala s ON p.codpredio = s.codpredio
+GROUP BY 
+    p.codpredio, p.descricaopredio
+HAVING 
+    COUNT(s.numsala) > 3
+ORDER BY 
+    p.descricaopredio;
+    </code>
+  </pre>
+        </section>
+
+        <section>
+            <h2>Consulta 2: Disciplinas e Siglas de Turmas por Professor</h2>
+            <pre>
+    <code>
+SELECT 
+    d.nomedisc,
+    t.siglatur
+FROM 
+    professor p
+JOIN 
+    profturma pt ON p.codprof = pt.codprof
+JOIN 
+    disciplina d ON pt.coddepto = d.coddept AND pt.numdisc = d.numdisc
+JOIN 
+    turma t ON pt.coddepto = t.coddept AND pt.numdisc = t.numdisc AND pt.anosem = t.anosem AND pt.siglatur = t.siglatur
+WHERE 
+    p.nomeprof = 'Tavares';
+    </code>
+  </pre>
+        </section>
+
+        <section>
+            <h2>Consulta 3: Resultado JSON com Dados do Professor, Turmas e Horários</h2>
+            <pre>
+    <code>
+SELECT JSON_ARRAYAGG(
+    JSON_OBJECT(
+        'nome_professor', p.nomeprof,
+        'turmas', (
+            SELECT JSON_ARRAYAGG(
+                JSON_OBJECT(
+                    'ano_semestre_turma', t.anosem,
+                    'sigla_turma', t.siglatur,
+                    'capacidade_turma', t.capacidade,
+                    'nome_disciplina', d.nomedisc,
+                    'descricao_predio', pr.descricaopredio,
+                    'num_sala', s.numsala,
+                    'dias_horarios', (
+                        SELECT JSON_ARRAYAGG(
+                            JSON_OBJECT(
+                                'dia_semana', h.diasem,
+                                'horario_inicio', h.horainicio
+                            )
+                        )
+                        FROM horario h
+                        WHERE h.coddept = t.coddept
+                          AND h.numdisc = t.numdisc
+                          AND h.anosem = t.anosem
+                          AND h.siglatur = t.siglatur
+                    )
+                )
+            )
+            FROM profturma pt
+            JOIN turma t ON pt.coddepto = t.coddept AND pt.numdisc = t.numdisc AND pt.anosem = t.anosem AND pt.siglatur = t.siglatur
+            JOIN disciplina d ON t.coddept = d.coddept AND t.numdisc = d.numdisc
+            LEFT JOIN horario h ON h.coddept = t.coddept AND h.numdisc = t.numdisc AND h.anosem = t.anosem AND h.siglatur = t.siglatur
+            LEFT JOIN predio pr ON h.codpredio = pr.codpredio
+            LEFT JOIN sala s ON h.codpredio = s.codpredio AND h.numsala = s.numsala
+            WHERE pt.codprof = p.codprof
+        )
+    )
+) AS resultado_json
+FROM professor p;
+    </code>
+  </pre>
+        </section>
+    </section>
+
+
+</body>
+
+</html>
